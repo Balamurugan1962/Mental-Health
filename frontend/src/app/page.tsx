@@ -1,93 +1,107 @@
 "use client";
 
-import { Outfit } from "next/font/google";
-import { Button } from "../components/Button";
-import Link from "next/link";
+import Image from 'next/image';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import PasswordInput from '../components/PasswordInput';
+import { assets } from '../assets/assets';
+import API from '../utils/api';
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["400", "700"], // choose what you need
-});
+const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-export default function LandingPage() {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const { data } = await API.post("/users/signin", { email, password }, { withCredentials: true });
+
+      if (data.token) {
+        localStorage.setItem("authToken", data.token);
+        window.location.href = "/home"; // redirect after login
+      } else {
+        setError(data.message || "Login failed");
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main
-      className={`min-h-screen bg-[#DAF1DE] flex flex-col items-center ${outfit.className}`}
-    >
-      {/* Header */}
-      <div className="w-full flex justify-between items-center px-10 pt-8 mt-0 ">
-        <h1 className="text-2xl text-[#0B2B26]">TakeUrTime</h1>
-        <div className="flex gap-4">
-          <Button className="bg-[#1B4D3E] text-white px-5 py-2 rounded-full">
-            Book Appointment
-          </Button>
-          <Link href="/chat">
-            <Button className="bg-[#1B4D3E] text-white px-5 py-2 rounded-full cursor-pointer">
-              Start Chat
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <>
+      <Link href="/">
+        <h1 className='absolute w-30 ml-5 mt-5 cursor-pointer text-2xl font-semibold'>TakeUrTime</h1>
+      </Link>
+      <div className='grid grid-cols-1 lg:grid-cols-5 h-screen'>
+        <div className='flex flex-col gap-2 col-span-2 items-center justify-center bg-[#F7FAFC] p-5'>
+          <form className='flex flex-col gap-4 w-[70%]' onSubmit={handleSubmit}>
+            <div className='flex flex-col gap-5'>
+              <h1 className='font-semibold text-4xl'>Sign in</h1>
+            </div>
 
-      {/* Main Section */}
-      <div className="w-full max-w-5xl flex flex-col md:flex-row items-start mt-20">
-        {/* Left Side */}
-        <div className="flex-1">
-          <h2 className="text-6xl font-bold leading-tight text-[#0B2B26]">
-            Because your <br /> mental health <br /> matters.
-          </h2>
+            <div>
+              <h2 className='text-[#718096]'>E-mail</h2>
+              <input 
+                className='border border-[#CBD5E0] w-full h-10 rounded-xl p-2.5'
+                type='email' 
+                placeholder='example@email.com'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <h2 className='text-[#718096]'>Password</h2>
+              <PasswordInput value={password} onChange={setPassword} />
+            </div>
+            
+            <div className='flex justify-between'>
+              <p className="text-red-500">{error}</p>
+              <Link href="/forgot-password" className='underline'>Forgot Password?</Link>
+            </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className='bg-[#1B4D3E] h-12 text-md rounded-xl text-white font-semibold cursor-pointer'
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </button>
+
+            <div className='grid grid-cols-5 justify-center items-center py-10'>
+              <hr className='col-span-2'/>
+              <h2 className='text-center'>OR</h2>
+              <hr className='col-span-2' />
+            </div>
+
+            <button 
+              type="button"
+              className='border border-[#CBD5E0] w-full rounded-full text-[#718096] flex p-3 gap-[30%] cursor-pointer'
+            >
+              <Image src={assets.google_logo} alt="Google login" className='w-5'/>
+              <p className='text-center'>Continue with Google</p>
+            </button>
+          </form>
         </div>
 
-        <div className="flex-1 flex gap-6 items-center">
-          <div className="w-px bg-gray-400  h-[230px] mt-2"></div>
-          <p className="text-xl text-[#3A3A3A] mt-5 ">
-            Take a step towards healing with a stigma-free, accessible, and
-            secure mental wellness companion. Whether you need instant support,
-            self-care resources, or professional guidance, we’re here for you —
-            day and night.
+        {/* Right Side */}
+        <div className='hidden lg:flex flex-col gap-10 col-span-3 justify-center items-center bg-[#1B4D3E]'>
+          <h1 className='text-5xl text-white font-medium'>Please Sign in to continue.</h1>
+          <h1 className='text-4xl text-white font-medium'>Because your mental health matters.</h1>
+          <p className='text-xl text-white w-[70%] text-center'>
+            Take a step towards healing with a stigma-free, accessible and secure mental wellness companion.
           </p>
         </div>
       </div>
-
-      {/* Footer Section */}
-      <div className="mt-16 text-center">
-        <p className="text-2xl font-medium text-[#1B1B1B] mb-6 mt-8">
-          Looking for more? Check the menu below to explore self-care,
-          <br /> music, journals, and more
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-4 mt-15">
-          <Link href="/mood">
-            <button className="bg-[#647E6D] text-black px-6 py-3 rounded-xl shadow-md hover:scale-105 transition">
-              Mood Tracker
-            </button>
-          </Link>
-
-          <Link href="/appointment">
-            <button className="bg-[#647E6D] text-black px-6 py-3 rounded-xl shadow-md hover:scale-105 transition">
-              Appointment Schedule
-            </button>
-          </Link>
-
-          <Link href="/gratitude">
-            <button className="bg-[#647E6D] text-black px-6 py-3 rounded-xl shadow-md hover:scale-105 transition">
-              Gratitude Journal
-            </button>
-          </Link>
-
-          <Link href="/breathing">
-            <button className="bg-[#647E6D] text-black px-6 py-3 rounded-xl shadow-md hover:scale-105 transition">
-              Breathing Exercise
-            </button>
-          </Link>
-
-          <Link href="/music">
-            <button className="bg-[#647E6D] text-black px-6 py-3 rounded-xl shadow-md hover:scale-105 transition">
-              Music
-            </button>
-          </Link>
-        </div>
-      </div>
-    </main>
+    </>
   );
-}
+};
+
+export default LoginPage;

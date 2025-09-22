@@ -6,13 +6,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 # for password hashing
 from flask_bcrypt import Bcrypt
+from flask_cors import CORS
 
 # loading environment variables
 load_dotenv()
 
 # declaring flask application
 app = Flask(__name__)
-
+CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
 # calling the dev configuration
 config = Config().dev_config
 

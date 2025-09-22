@@ -13,7 +13,7 @@ def handle_signup():
         data = request.get_json()
         if not data:
             return Response(
-                response=json.dumps({'status': "failed", "message": "Request body must be JSON"}),
+                response=json.dumps({'status': False, "message": "Request body must be JSON"}),
                 status=400,
                 mimetype='application/json'
             )
@@ -39,9 +39,9 @@ def handle_signup():
 
                 token = encode(payload, os.getenv('SECRET_KEY'), algorithm='HS256')
 
-                return Response(
+                resp = Response(
                     response=json.dumps({
-                        'status': "success",
+                        'status': True,
                         "message": "User Sign up Successful",
                         "token": token
                     }),
@@ -49,10 +49,19 @@ def handle_signup():
                     mimetype='application/json'
                 )
 
+                resp.set_cookie(
+                                "authToken",       # Cookie name
+                                token,             # JWT token
+                                samesite="None",
+                                secure=False,
+                                max_age=3600       # 1 hour expiry
+                            )
+                return resp
+
             else:
                 return Response(
                     response=json.dumps({
-                        'status': "failed",
+                        'status': False,
                         "message": "User already exists kindly use sign in"
                     }),
                     status=409,
@@ -62,7 +71,7 @@ def handle_signup():
         else:
             return Response(
                 response=json.dumps({
-                    'status': "failed",
+                    'status': False,
                     "message": "User Parameters username, email, and password are required"
                 }),
                 status=400,
@@ -72,7 +81,7 @@ def handle_signup():
     except Exception as e:
         return Response(
             response=json.dumps({
-                'status': "failed",
+                'status': False,
                 "message": "Error Occurred",
                 "error": str(e)
             }),
@@ -98,38 +107,48 @@ def handle_login():
                         }
                     token = encode(payload,os.getenv('SECRET_KEY'),algorithm='HS256')
 
-                    return Response(
-                            response=json.dumps({'status': "success",
+                    resp = Response(
+                            response=json.dumps({'status': True,
                                                 "message": "User Sign In Successful",
                                                 "token": token}),
                             status=200,
                             mimetype='application/json'
                         )
 
+                    resp.set_cookie(
+                                "authToken",       # Cookie name
+                                token,             # JWT token
+                                samesite="None",
+                                secure=False,
+                                max_age=3600       # 1 hour expiry
+                            )
+
+                    return resp
+
                 else:
                     return Response(
-                        response=json.dumps({'status': "failed", "message": "User Password Mistmatched"}),
+                        response=json.dumps({'status': False, "message": "User Password Mistmatched"}),
                         status=401,
                         mimetype='application/json'
                     )
 
             else:
                 return Response(
-                    response=json.dumps({'status': "failed", "message": "User Record doesn't exist, kindly register"}),
+                    response=json.dumps({'status': False, "message": "User Record doesn't exist, kindly register"}),
                     status=404,
                     mimetype='application/json'
                 )
         else:
 
             return Response(
-                response=json.dumps({'status': "failed", "message": "User Parameters Email and Password are required"}),
+                response=json.dumps({'status': False, "message": "User Parameters Email and Password are required"}),
                 status=400,
                 mimetype='application/json'
             )
 
     except Exception as e:
         return Response(
-                response=json.dumps({'status': "failed",
+                response=json.dumps({'status': False,
                                      "message": "Error Occured",
                                      "error": str(e)}),
                 status=500,
